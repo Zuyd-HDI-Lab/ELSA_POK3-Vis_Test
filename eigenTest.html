@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+         <!-- Make sure you put this AFTER Leaflet's CSS -->
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        <style>
+            #map {
+                position: absolute;
+                top: 0px;
+                bottom: 0px;
+                width: 100%;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="map"></div>
+        
+        <script type="text/javascript">
+            //The first part of the code initializes a map object with L.map('map'). 
+            //The 'map' argument refers to the id of the HTML element where the map will be displayed.
+            var map = L.map('map');
+            //The setView method is then used to set the initial geographical center of the map.
+            //Coordinates: [long, lat] -> [50.8860, 5.9804] (Heerlen)
+            //Zoomfactor: least = 1 (whole world), max = 20 (streetlevel).
+            map.setView([50.8860, 5.9804], 13);
+            
+            // load OpenStreetMap basemap
+            //A basemap is loaded from OpenStreetMap using the L.tileLayer function. 
+            //The URL template 'http://{s}.tile.osm.org/{z}/{x}/{y}.png' is used to fetch the map tiles. 
+            //The {s}, {z}, {x}, and {y} parts of the URL are placeholders that Leaflet.js will replace with the actual values needed to fetch each tile. 
+            var basemap = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png');
+            basemap.addTo(map);
+
+            //load BAG data
+            //Constructs a URL and a set of parameters to fetch GeoJSON data from a Web Feature Service (WFS) -> https://en.wikipedia.org/wiki/Web_Feature_Service. 
+            //The parameters specify the type of request (GetFeature), the service (WFS), 
+            //the type of features to fetch (bag:pand), the maximum number of features to fetch (100), 
+            //the output format (json), the coordinate reference system (EPSG:4326)
+            //and a bounding box within which to fetch features.
+            var url = 'https://geodata.nationaalgeoregister.nl/bag/wfs?';
+            var params = 'request=GetFeature&';
+                params += 'service=WFS&';
+                params += 'typeName=bag:pand&';
+                params += 'count=100&';
+                params += 'outputFormat=json&';
+                params += 'srsName=EPSG:4326&';
+                params += 'bbox=232425,583269,234365,584240';
+
+            $.getJSON(url + params, function(data) {
+                $.each(data.features, function(index, geometry) {
+                    L.geoJson(geometry).addTo(map);
+                });
+            });
+        </script>
+    </body>
+</html>
