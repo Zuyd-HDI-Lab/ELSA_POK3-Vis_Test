@@ -21,3 +21,6 @@ De geobestanden die nodig zijn voor thematische kaarten worden door het CBS gepu
 
 ## Licentie
 Op alle datasets van het CBS en alle codevoorbeelden is de licentie Creative Commons Naamsvermelding van toepassing. Als onderdeel van Creative Commons Naamsvermelding is het bij hergebruik verplicht te vermelden dat de gegevens afkomstig zijn van het CBS. Meer informatie is te vinden in de [Disclaimer Open Data](https://www.cbs.nl/-/media/statline/documenten/disclaimer-open-data-v-2.pdf?la=nl-nl).
+
+
+
