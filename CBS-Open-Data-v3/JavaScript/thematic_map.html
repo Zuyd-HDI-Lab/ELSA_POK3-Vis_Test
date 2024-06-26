@@ -121,17 +121,27 @@
             info.update(layer.feature.properties);
         }
 
+        //http://example.com/geoserver/wfs?
+        //    service=wfs&
+        //    version=2.0.0&
+        //    request=GetFeature&
+        //    typeNames=namespace:featuretype
+        //    outputFormat=application/json
+        
+        //Bijbehorende "Capabilities" om te zien welke namespaces en featuretypes beschikbaar zijn
+        //https://service.pdok.nl/cbs/gebiedsindelingen/2024/wfs/v1_0?request=GetCapabilities&service=WFS
+
         // get geojson from PDOK
         mapData = jQuery.ajax({
-            url: "https://www.pdok.nl/cbsgebiedsindelingen/wfs?OUTPUTFORMAT=json&REQUEST=GetFeature&SERVICE=WFS&SRSNAME=EPSG:4326&TypeName=cbs_gemeente_2018_gegeneraliseerd&VERSION=1.1.0",
-            //"https://geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs?OUTPUTFORMAT=json&REQUEST=GetFeature&SERVICE=WFS&SRSNAME=EPSG:4326&TypeName=cbs_gemeente_2018_gegeneraliseerd&VERSION=1.1.0",
+            url: "https://service.pdok.nl/cbs/gebiedsindelingen/2024/wfs/v1_0?request=GetFeature&service=WFS&typeName=gebiedsindelingen:gemeente_gegeneraliseerd&VERSION=2.0.0&outputFormat=application/json",
+               //"https://geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs?OUTPUTFORMAT=json&REQUEST=GetFeature&SERVICE=WFS&SRSNAME=EPSG:4326&TypeName=cbs_gemeente_2018_gegeneraliseerd&VERSION=1.1.0",
             dataType: "json",
             success: console.log("Provincie data successfully loaded."),
             error: function (xhr) {
+                console.log("Provincie data error.",xhr.statusText)
                 alert(xhr.statusText)
             }
         })
-        console.log(mapData)
 
         // get odata from CBS
         var dataField = 'VoertuigenMetBromfietskenteken_203';
@@ -140,16 +150,24 @@
             dataType: "json",
             success: console.log("oData successfully loaded."),
             error: function (xhr) {
+                success: console.log("oData error.",xhr.statusText)
                 alert(xhr.statusText)
             }
         })
 
+        console.log(odata)
+        
         // when both data sources available
         $.when(mapData).then(odata).done(function () {
+            console.log("Data loaded.. Getting map")
+
             map = L.map('map').setView([52.6, 5.38], 8);
 
+            //BRT-A Obsolete!!
+            //Nieuwe URL--> https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0?request=getcapabilities&service=wmts
             var basemap = L.tileLayer(
                 'https://geodata.nationaalgeoregister.nl/tiles/service/wmts/brtachtergrondkaart/EPSG:3857/{z}/{x}/{y}.png', {
+                //    'https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0?request=gettile&service=wmts/{z}/{x}/{y}.png', {
                     minZoom: 6,
                     maxZoom: 19,
                     bounds: [
@@ -159,10 +177,12 @@
                     attribution: 'Kaartgegevens &copy; <a href="kadaster.nl">Kadaster</a>, Data <a href="https://www.cbs.nl">CBS</a>'
                 });
             basemap.addTo(map);
+            console.log(basemap)
+            console.log("Map loaded.. Getting data")
 
             // detect limits 
             data = odata.responseJSON.value;
-
+            
             for (x in data) {
                 var v = data[x][dataField];
                 if (v < min) min = v;
@@ -170,7 +190,7 @@
             }
             range = max - min;
             range = Math.ceil(range / 5);
-
+            console.log(mapData)
             // add events to geojson features
             regions = L.geoJSON(mapData.responseJSON, {
                 onEachFeature: onEachFeature,
@@ -215,7 +235,7 @@
             legend.addTo(map);
 
         });
-
+        console.log("Done")
         // reset to original style
         function resetHighlight(e) {
             regions.resetStyle(e.target);

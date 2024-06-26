@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+         <!-- Make sure you put this AFTER Leaflet's CSS -->
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        <style>
+            #header {
+                text-align: center;
+                padding: 10px;
+                height: 75px;
+                background-color: #8f067ac4;
+                margin-bottom: 20px;
+            }
+            #map {
+                position: absolute;
+                align-items: center;
+                height: 800px;
+                width: 95%;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="header">
+            <h1>Testing Maps & DataLayers</h1>
+        </div>
+        <div id="map"></div>
+        
+        <script type="text/javascript">
+            var map = L.map('map');
+            //The setView method is then used to set the initial geographical center of the map.
+            //Coordinates: [long, lat] -> [50.8860, 5.9804] (Heerlen)
+            //Zoomfactor: least = 1 (whole world), max = 20 (streetlevel).
+            map.setView([-49.837995, 16.867864], 1);
+
+            url = 'http://{s}.tile.osm.org/{z}/{x}/{y}.png'
+            var worldmap = L.tileLayer(url);
+            worldmap.addTo(map);
+
+            const BRTA_ATTRIBUTION = 'Kaartgegevens: © <a href="http://www.cbs.nl">CBS</a>, <a href="http://www.kadaster.nl">Kadaster</a>, <span class="printhide">-auteurs (<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>).</span>'
+            
+            function getWMTSLayer (layername, attribution) {
+                return L.tileLayer("https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/"+ layername +"/EPSG:28992/{z}/{x}/{y}.png", { // eslint-disable-line no-undef
+                    WMTS: false,
+                    attribution: attribution,
+                    crossOrigin: true,
+                    maxZoom: 14
+                })
+            }
+
+            var basemaps = {
+                Achtergrondkaart: getWMTSLayer('standaard', BRTA_ATTRIBUTION),
+                Grijs: getWMTSLayer('grijs', BRTA_ATTRIBUTION),
+                Pastel: getWMTSLayer('pastel', BRTA_ATTRIBUTION),
+                Water: getWMTSLayer('water', BRTA_ATTRIBUTION)
+            }            
+
+            basemaps.Pastel.addTo(map);
+            L.control.layers(basemaps).addTo(map);
+            
+            var marker = L.marker([0,0]).addTo(map); //Amersfoort -> Midden van de kaart; //LatLong: 52.09186, 5.23141
+            
+            /*function onMapClick(e) {
+                alert("You clicked the map at " + e.latlng);
+            }
+            map.on('click', onMapClick);*/
+
+            //https://service.pdok.nl/cbs/wijkenbuurten/2023/wfs/v1_0?request=GetCapabilities&service=WFS
+
+            var geojsonMarkerOptions = {
+                radius: 5,
+                fillColor: "#ff7800",
+                color: "#000",
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.8
+            };
+
+            fetch('https://service.pdok.nl/prorail/spoorwegen/wfs/v1_0?request=GetFeature&service=WFS&version=2.0.0&outputFormat=application/json&srsname=EPSG:4326&count=100&typename=spoorwegen:station')
+            //fetch('https://service.pdok.nl/prorail/spoorwegen/wfs/v1_0?request=GetFeature&service=WFS&version=2.0.0&outputFormat=application/json&srsname=EPSG:28992&count=100&typename=spoorwegen:station')                        
+                .then(response => response.json())
+                .then(data => {
+                    L.geoJSON(data, {
+                    pointToLayer: function(feature, latlng) {
+                        console.log(latlng)
+                        return L.circleMarker(latlng, geojsonMarkerOptions);
+                    }
+                    }).addTo(map);
+            });
+
+        </script>
+    </body>
+</html>            

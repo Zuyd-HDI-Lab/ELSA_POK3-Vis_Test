@@ -8,16 +8,26 @@
          <!-- Make sure you put this AFTER Leaflet's CSS -->
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
         <style>
+            #header {
+                text-align: center;
+                padding: 10px;
+                height: 75px;
+                background-color: #8f067ac4;
+                margin-bottom: 20px;
+            }
             #map {
                 position: absolute;
-                top: 0px;
-                bottom: 0px;
-                width: 100%;
+                align-items: center;
+                height: 400px;
+                width: 95%;
             }
         </style>
     </head>
 
     <body>
+        <div id="header">
+            <h1>Testing Maps & DataLayers</h1>
+        </div>
         <div id="map"></div>
         
         <script type="text/javascript">
@@ -27,33 +37,81 @@
             //The setView method is then used to set the initial geographical center of the map.
             //Coordinates: [long, lat] -> [50.8860, 5.9804] (Heerlen)
             //Zoomfactor: least = 1 (whole world), max = 20 (streetlevel).
-            map.setView([50.8860, 5.9804], 13);
+            map.setView([50.883588, 5.975641], 13);
             
             // load OpenStreetMap basemap
             //A basemap is loaded from OpenStreetMap using the L.tileLayer function. 
             //The URL template 'http://{s}.tile.osm.org/{z}/{x}/{y}.png' is used to fetch the map tiles. 
             //The {s}, {z}, {x}, and {y} parts of the URL are placeholders that Leaflet.js will replace with the actual values needed to fetch each tile. 
-            var basemap = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png');
+            url = 'http://{s}.tile.osm.org/{z}/{x}/{y}.png'
+            
+            //url = 'https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0?request=gettile&service=wmts/{z}/{x}/{y}.png';
+            
+            var basemap = L.tileLayer(url);
             basemap.addTo(map);
 
-            //load BAG data
+
+            var marker = L.marker([50.882661, 5.973390]).addTo(map);
+          /*  var circle = L.circle([50.880947, 5.959373], {
+                color: '#8f067ac4',
+                fillColor: '#8f067ac4',
+                fillOpacity: 0.5,
+                radius: 200
+            }).addTo(map);*/
+
+           /* var polygon = L.polygon([
+                [50.882661, 5.973390],
+                [50.880947, 5.959373],
+                [50.868350, 5.978718]
+            ]).addTo(map);
+            */
+            
+            marker.bindPopup("<b>Lectoraat HDI</b><br>BSSC<br>Smedestraat 2")//.openPopup();
+           //circle.bindPopup("<b>Zuyd Hogeschool</b><br>Nieuw Eyckholt 300")//.openPopup();
+            //polygon.bindPopup("I am a polygon.").openPopup();
+
+            //http://example.com/geoserver/wfs?
+            //    service=wfs&
+            //    version=2.0.0&
+            //    request=GetFeature&
+            //    typeNames=namespace:featuretype
+            //    outputFormat=application/json
+            
+            //Bijbehorende "Capabilities" om te zien welke namespaces en featuretypes beschikbaar zijn
+            //https://service.pdok.nl/cbs/gebiedsindelingen/2024/wfs/v1_0?request=GetCapabilities&service=WFS
+
+            //load data
             //Constructs a URL and a set of parameters to fetch GeoJSON data from a Web Feature Service (WFS) -> https://en.wikipedia.org/wiki/Web_Feature_Service. 
             //The parameters specify the type of request (GetFeature), the service (WFS), 
             //the type of features to fetch (bag:pand), the maximum number of features to fetch (100), 
             //the output format (json), the coordinate reference system (EPSG:4326)
             //and a bounding box within which to fetch features.
-            var url = 'https://geodata.nationaalgeoregister.nl/bag/wfs?';
+            var url = 'https://service.pdok.nl/cbs/gebiedsindelingen/2024/wfs/v1_0?';
             var params = 'request=GetFeature&';
                 params += 'service=WFS&';
-                params += 'typeName=bag:pand&';
+                params += 'version=2.0.0&';
+                params += 'typeName=gebiedsindelingen:coropgebied_gegeneraliseerd&';
                 params += 'count=100&';
                 params += 'outputFormat=json&';
                 params += 'srsName=EPSG:4326&';
-                params += 'bbox=232425,583269,234365,584240';
-
+                params += 'bbox=172724.9389999993,306846.1979999989,204711.5799999982,342650.99909999967';
+            
+            console.log(url+params)
             $.getJSON(url + params, function(data) {
                 $.each(data.features, function(index, geometry) {
-                    L.geoJson(geometry).addTo(map);
+                    console.log(geometry);
+                    console.log(geometry.geometry.coordinates[0]);
+                    //L.geoJson(geometry).addTo(map);
+                    //L.polygon(geometry.geometry.coordinates).addTo(map);
+                    $.each(geometry.geometry.coordinates[0], function(index, coord) {
+                        console.log("Coord,", coord);
+                        var circle = L.circle(coord, {
+                            color: '#8f067ac4',
+                            fillColor: '#8f067ac4',
+                            fillOpacity: 0.5,
+                            radius: 10
+                        }).addTo(map);
+                    });
                 });
             });
         </script>
